@@ -107,7 +107,7 @@ def fix_layout():
     keyboard.send('ctrl+v')
 
 def setup_startup():
-    """Checks if a shortcut to the script/exe exists in Windows Startup. If not, creates one."""
+    """Checks if a shortcut to the script/exe exists in Windows Startup. If not, prompts user to create one."""
     try:
         is_frozen = getattr(sys, 'frozen', False)
         current_path = sys.executable if is_frozen else os.path.abspath(sys.argv[0])
@@ -116,6 +116,18 @@ def setup_startup():
         shortcut_path = os.path.join(startup_folder, 'HebrewTypingConvertor.lnk')
         
         if not os.path.exists(shortcut_path):
+            if is_frozen:
+                import ctypes
+                # MB_YESNO (4) | MB_ICONQUESTION (32) = 36
+                res = ctypes.windll.user32.MessageBoxW(
+                    0,
+                    "Would you like to install Hebrew Typing Convertor and run it automatically on Windows startup?",
+                    "Install Hebrew Typing Convertor",
+                    36
+                )
+                if res != 6:  # 6 is IDYES. If user clicked No (7) or closed it, exit immediately.
+                    sys.exit(0)
+            
             import subprocess
             # Powershell script to create shortcut (.lnk)
             ps_cmd = (
@@ -127,7 +139,7 @@ def setup_startup():
             cmd = f'powershell -NoProfile -Command "{ps_cmd}"'
             subprocess.run(cmd, shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
             
-            # Show popup notification if running as compiled EXE
+            # Show success popup notification if running as compiled EXE
             if is_frozen:
                 import ctypes
                 ctypes.windll.user32.MessageBoxW(
