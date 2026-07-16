@@ -139,7 +139,22 @@ def setup_startup():
     except Exception:
         pass
 
+_instance_mutex = None
+
+def check_single_instance():
+    """Uses a Windows Mutex to ensure only one instance of the app runs at a time."""
+    global _instance_mutex
+    try:
+        import ctypes
+        # Create a unique named global mutex
+        _instance_mutex = ctypes.windll.kernel32.CreateMutexW(None, True, "Global\\HebrewTypingConvertorMutex")
+        if ctypes.windll.kernel32.GetLastError() == 183:  # ERROR_ALREADY_EXISTS
+            sys.exit(0)
+    except Exception:
+        pass
+
 def main():
+    check_single_instance()
     setup_startup()
     print("=" * 60)
     print(" Hebrew / English Keyboard Layout Fixer (Active)")
