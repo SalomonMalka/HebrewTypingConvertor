@@ -113,7 +113,7 @@ def setup_startup():
         current_path = sys.executable if is_frozen else os.path.abspath(sys.argv[0])
         
         startup_folder = os.path.join(os.getenv('APPDATA'), r'Microsoft\Windows\Start Menu\Programs\Startup')
-        shortcut_path = os.path.join(startup_folder, 'HebrewTypingTranslator.lnk')
+        shortcut_path = os.path.join(startup_folder, 'HebrewTypingConvertor.lnk')
         
         if not os.path.exists(shortcut_path):
             import subprocess
@@ -132,7 +132,7 @@ def setup_startup():
                 import ctypes
                 ctypes.windll.user32.MessageBoxW(
                     0, 
-                    "Hebrew Typing Translator has been successfully added to your Windows Startup and is now running in the background!\n\nUse Ctrl+Shift+Y to translate highlighted text.", 
+                    "Hebrew Typing Convertor has been successfully added to your Windows Startup and is now running in the background!\n\nUse Ctrl+Shift+Y to translate highlighted text.", 
                     "Setup Successful", 
                     64 # MB_ICONINFORMATION
                 )
