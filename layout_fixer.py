@@ -135,6 +135,9 @@ def setup_startup(is_startup: bool = False):
                             "Uninstall Successful",
                             64 # MB_ICONINFORMATION
                         )
+                        # Terminate all running instances of this executable
+                        import subprocess
+                        subprocess.run("taskkill /f /im HebrewTypingConvertor.exe", shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
                     except Exception as e:
                         ctypes.windll.user32.MessageBoxW(
                             0,
@@ -296,9 +299,9 @@ def show_gui():
         pass
 
 def main():
-    check_single_instance()
     is_startup = '--startup' in sys.argv
     setup_startup(is_startup)
+    check_single_instance()
     
     # If this is a manual launch, show the GUI window
     if not is_startup:
