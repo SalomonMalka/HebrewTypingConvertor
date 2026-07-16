@@ -90,7 +90,13 @@ def simulate_paste():
     send_key_event(VK_CONTROL, down=False)
 
 def fix_layout():
-    """Copies selected text, translates it, and pastes it back."""
+    """Copies selected text, translates it, and pastes it back, then restores previous clipboard."""
+    # Save the original clipboard content to restore it later
+    try:
+        old_clipboard = pyperclip.paste()
+    except Exception:
+        old_clipboard = ""
+
     # Wait for the hotkey keys to be released to prevent modifier leakage (e.g., Ctrl+Shift+C in Word)
     keys = [k.strip() for k in HOTKEY.split('+')]
     for _ in range(50):  # Timeout after 500ms
@@ -121,15 +127,23 @@ def fix_layout():
         if copied_text:
             break
             
-    # If nothing was selected, do nothing
+    # If nothing was selected, restore clipboard and exit
     if not copied_text:
+        try:
+            pyperclip.copy(old_clipboard)
+        except Exception:
+            pass
         return
         
     # Translate the text
     translated_text = translate_text(copied_text)
     
-    # If the translated text is identical, do nothing
+    # If the translated text is identical, restore clipboard and exit
     if translated_text == copied_text:
+        try:
+            pyperclip.copy(old_clipboard)
+        except Exception:
+            pass
         return
         
     # Put translated text on clipboard and paste it
@@ -140,9 +154,21 @@ def fix_layout():
         try:
             pyperclip.copy(translated_text)
         except Exception:
+            # Restore clipboard on failure
+            try:
+                pyperclip.copy(old_clipboard)
+            except Exception:
+                pass
             return
             
     simulate_paste()
+    
+    # Wait a small delay for the pasting to finish, then restore the user's original clipboard
+    time.sleep(0.15)
+    try:
+        pyperclip.copy(old_clipboard)
+    except Exception:
+        pass
 
 def setup_startup(is_startup: bool = False):
     """Checks if a shortcut to the script/exe exists in Windows Startup. If not, prompts user to create one. If yes, offers uninstall."""
