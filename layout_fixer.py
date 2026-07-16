@@ -51,6 +51,44 @@ def translate_text(text: str) -> str:
     
     return "".join(mapping.get(char, char) for char in text)
 
+# Windows Virtual Key Codes
+VK_CONTROL = 0x11
+VK_SHIFT = 0x10
+VK_MENU = 0x12
+VK_LWIN = 0x5B
+VK_C = 0x43
+VK_V = 0x56
+KEYEVENTF_KEYUP = 0x0002
+
+def send_key_event(vk, down=True):
+    flags = 0 if down else KEYEVENTF_KEYUP
+    try:
+        import ctypes
+        ctypes.windll.user32.keybd_event(vk, 0, flags, 0)
+    except Exception:
+        pass
+
+def release_modifiers():
+    # Explicitly release Ctrl, Shift, Alt, and Win keys to prevent stuck modifiers
+    for vk in [VK_CONTROL, VK_SHIFT, VK_MENU, VK_LWIN]:
+        send_key_event(vk, down=False)
+
+def simulate_copy():
+    release_modifiers()
+    send_key_event(VK_CONTROL, down=True)
+    send_key_event(VK_C, down=True)
+    time.sleep(0.02)
+    send_key_event(VK_C, down=False)
+    send_key_event(VK_CONTROL, down=False)
+
+def simulate_paste():
+    release_modifiers()
+    send_key_event(VK_CONTROL, down=True)
+    send_key_event(VK_V, down=True)
+    time.sleep(0.02)
+    send_key_event(VK_V, down=False)
+    send_key_event(VK_CONTROL, down=False)
+
 def fix_layout():
     """Copies selected text, translates it, and pastes it back."""
     # Wait for the hotkey keys to be released to prevent modifier leakage (e.g., Ctrl+Shift+C in Word)
@@ -70,7 +108,7 @@ def fix_layout():
         pass
     
     # Trigger Copy (Ctrl+C)
-    keyboard.send('ctrl+c')
+    simulate_copy()
     
     # Wait for the clipboard to receive the copied text (up to 500ms)
     copied_text = ""
@@ -104,7 +142,7 @@ def fix_layout():
         except Exception:
             return
             
-    keyboard.send('ctrl+v')
+    simulate_paste()
 
 def setup_startup(is_startup: bool = False):
     """Checks if a shortcut to the script/exe exists in Windows Startup. If not, prompts user to create one. If yes, offers uninstall."""
