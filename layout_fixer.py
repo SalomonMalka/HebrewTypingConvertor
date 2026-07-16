@@ -270,8 +270,26 @@ def check_single_instance():
     except Exception:
         pass
 
+def kill_other_instances():
+    """Kills any other running instances of HebrewTypingConvertor.exe to let the new version take over."""
+    try:
+        import os
+        import subprocess
+        our_pid = os.getpid()
+        # Powershell command to terminate other processes with the same executable name
+        ps_kill = f"Get-Process HebrewTypingConvertor -ErrorAction SilentlyContinue | Where-Object {{$_.Id -ne {our_pid}}} | Stop-Process -Force"
+        subprocess.run(f'powershell -NoProfile -Command "{ps_kill}"', shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    except Exception:
+        pass
+
 def main():
     is_startup = '--startup' in sys.argv
+    
+    # If manually run, terminate other background processes first so the new code takes over
+    if not is_startup:
+        kill_other_instances()
+        time.sleep(0.1)
+        
     setup_startup(is_startup)
     check_single_instance()
     
