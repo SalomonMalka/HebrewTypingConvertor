@@ -1,55 +1,72 @@
-# Hebrew / English Keyboard Layout Fixer
+# Hebrew / English Keyboard Layout Translator
 
-A lightweight utility for Windows that instantly translates text typed in the wrong keyboard layout (e.g., `הקךךם` $\leftrightarrow$ `hello`, `akuo` $\leftrightarrow$ `שלום`).
+A lightweight Windows background utility that instantly translates text typed in the wrong keyboard layout (e.g. `הקךךם` $\leftrightarrow$ `hello`, `akuo` $\leftrightarrow$ `שלום`).
 
 When you notice a typing mistake, simply **highlight the text** and press **`Ctrl+Shift+Y`**. The utility will automatically correct it inline.
 
 ---
 
-## Option 1: Python background utility (Already Set Up)
+## 🚀 1-Click Install (For Other Computers)
 
-Since you already have Python installed and the dependencies (`keyboard`, `pyperclip`) are configured, you can run this script immediately.
+To run this on another computer with **no setup or installation required**:
 
-### Run in the foreground (with a console window)
-To run and see logs (ideal for testing):
+1. Go to your GitHub repository's **Releases** page (once you upload the binary).
+2. Download the **`HebrewTypingTranslator.exe`** file from the assets list.
+3. Run the downloaded `.exe` file.
+   * **First Run:** A popup window will confirm: *"Hebrew Typing Translator has been successfully added to your Windows Startup and is now running in the background!"*. It automatically copies a shortcut to itself into your Windows Startup directory.
+   * **Subsequent boots:** The app will launch completely silently in the background.
+
+---
+
+## 🛠️ How to Publish this Project to GitHub
+
+To make this downloadable for others, run these commands in your project folder to link your local Git repository and push it to GitHub:
+
+1. Create a new repository on [github.com](https://github.com/) (do not add a README, license, or .gitignore—keep it empty).
+2. Copy the repository URL (e.g., `https://github.com/YOUR_USERNAME/HebrewTypingTranslator.git`).
+3. Open terminal/PowerShell in this directory and run:
+   ```bash
+   # Add your GitHub repository link
+   git remote add origin YOUR_REPOSITORY_URL
+   
+   # Push your code to GitHub
+   git branch -M main
+   git push -u origin main
+   ```
+4. **Publish the executable:**
+   * Go to your repository on GitHub.
+   * Click **Create a new release** on the right side.
+   * Upload the compiled executable `dist/HebrewTypingTranslator.exe` (found in your local project folder) as a release asset.
+   * Publish the release. Now, anyone can download the `.exe` with 1 click!
+
+---
+
+## 💻 Running from Source (For Developers)
+
+If you have Python installed and want to run or modify the code directly:
+
+### 1. Install Dependencies
 ```bash
-python layout_fixer.py
+pip install keyboard pyperclip
 ```
 
-### Run silently in the background (no console window)
-To run it completely hidden in the background:
+### 2. Run in the Background
+To run silently without a console window:
 ```bash
 pythonw layout_fixer.py
 ```
 
-### Run on Windows Startup
-To have the script run automatically every time you start your computer:
-1. Press `Win + R` to open the Run dialog.
-2. Type `shell:startup` and press **Enter**. This opens your Windows Startup folder.
-3. Right-click inside the folder, select **New > Shortcut**.
-4. In the location field, paste the following command:
-   ```cmd
-   pythonw.exe "C:\Users\salom\OneDrive\Documents\Antigravity\HebrewTypingTranslator\layout_fixer.py"
-   ```
-5. Click **Next**, name the shortcut (e.g., "Keyboard Layout Fixer"), and click **Finish**.
+### 3. Native AutoHotkey Alternative
+If you prefer a native Windows script (requires installing AutoHotkey v2):
+* Double-click `layout_fixer.ahk` to run it.
+* Move `layout_fixer.ahk` into your Startup folder (`shell:startup`) to run automatically on boot.
 
 ---
 
-## Option 2: AutoHotkey (AHK) Utility (Native Alternative)
-
-If you prefer a native, ultra-lightweight Windows script with zero memory footprint:
-
-1. Download and install **AutoHotkey v2** from the [official website](https://www.autohotkey.com/).
-2. Double-click the `layout_fixer.ahk` file in this directory to run it.
-3. **To run on startup:** Simply copy the `layout_fixer.ahk` file (or create a shortcut to it) and paste it into the `shell:startup` folder (opened using `Win+R` $\rightarrow$ `shell:startup`).
-
----
-
-## How It Works Under the Hood
+## 🔍 How It Works Under the Hood
 1. It listens for the `Ctrl+Shift+Y` keyboard shortcut globally.
-2. When pressed, it backups your clipboard, clears it, and simulates a `Ctrl+C` copy keypress.
-3. It detects if the selected text is Hebrew or English:
-   - If it contains Hebrew letters, it maps them to their QWERTY layout positions.
-   - If it contains English letters, it maps them to their Hebrew layout positions.
-4. It places the translated text in your clipboard and simulates a `Ctrl+V` paste keypress.
-5. It waits 150ms for the paste to finish, then restores your original clipboard contents.
+2. When pressed, it waits 50ms for you to release the keys (preventing modifier key leaks in applications like Microsoft Word).
+3. It clears the clipboard, copies the highlighted text, and analyzes the characters.
+   - If it contains Hebrew, it maps it back to English.
+   - If it contains English, it maps it back to Hebrew.
+4. It sets the clipboard to the corrected text and simulates a `Ctrl+V` paste command.
