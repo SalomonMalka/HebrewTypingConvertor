@@ -206,106 +206,20 @@ def check_single_instance():
     except Exception:
         pass
 
-def show_gui():
-    """Shows a clean Tkinter GUI window to let the user know the app is running."""
-    try:
-        import tkinter as tk
-        root = tk.Tk()
-        root.title("Hebrew Typing Convertor")
-        root.geometry("420x220")
-        root.resizable(False, False)
-        root.configure(bg="#f3f4f6")
-        
-        # Center the window on screen
-        screen_width = root.winfo_screenwidth()
-        screen_height = root.winfo_screenheight()
-        x = (screen_width - 420) // 2
-        y = (screen_height - 220) // 2
-        root.geometry(f"420x220+{x}+{y}")
-        
-        # Title Label
-        title_label = tk.Label(
-            root, 
-            text="Hebrew Typing Convertor", 
-            font=("Segoe UI", 16, "bold"), 
-            bg="#f3f4f6", 
-            fg="#1f2937"
-        )
-        title_label.pack(pady=15)
-        
-        # Status Label
-        status_label = tk.Label(
-            root, 
-            text="● Active & Listening in Background", 
-            font=("Segoe UI", 10, "bold"), 
-            bg="#f3f4f6", 
-            fg="#10b981"
-        )
-        status_label.pack(pady=2)
-        
-        # Instruction Label
-        instruction_label = tk.Label(
-            root, 
-            text="Highlight text and press Ctrl+Shift+Y to translate.", 
-            font=("Segoe UI", 10), 
-            bg="#f3f4f6", 
-            fg="#4b5563"
-        )
-        instruction_label.pack(pady=10)
-        
-        # Buttons Frame
-        btn_frame = tk.Frame(root, bg="#f3f4f6")
-        btn_frame.pack(pady=10)
-        
-        def hide_window():
-            root.destroy()
-            
-        hide_btn = tk.Button(
-            btn_frame, 
-            text="Hide (Keep Running)", 
-            command=hide_window, 
-            font=("Segoe UI", 10, "bold"), 
-            bg="#3b82f6", 
-            fg="white", 
-            padx=12, 
-            pady=6, 
-            bd=0, 
-            cursor="hand2"
-        )
-        hide_btn.grid(row=0, column=0, padx=10)
-        
-        def exit_app():
-            import os
-            os._exit(0)
-            
-        exit_btn = tk.Button(
-            btn_frame, 
-            text="Stop & Exit", 
-            command=exit_app, 
-            font=("Segoe UI", 10, "bold"), 
-            bg="#ef4444", 
-            fg="white", 
-            padx=12, 
-            pady=6, 
-            bd=0, 
-            cursor="hand2"
-        )
-        exit_btn.grid(row=0, column=1, padx=10)
-        
-        # Keep window on top
-        root.attributes("-topmost", True)
-        root.mainloop()
-    except Exception:
-        pass
-
 def main():
     is_startup = '--startup' in sys.argv
     setup_startup(is_startup)
     check_single_instance()
     
-    # If this is a manual launch, show the GUI window
-    if not is_startup:
-        show_gui()
+    # If this is a manual launch, show a quick notification that it is running in background
+    if not is_startup and getattr(sys, 'frozen', False):
+        import ctypes
+        ctypes.windll.user32.MessageBoxW(
+            0,
+            "Hebrew Typing Convertor is now running in the background!\n\nUse Ctrl+Shift+Y to translate highlighted text.",
+            "Running",
+            64 # MB_ICONINFORMATION
+        )
         
     print("=" * 60)
     print(" Hebrew / English Keyboard Layout Fixer (Active)")
