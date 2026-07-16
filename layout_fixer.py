@@ -106,7 +106,7 @@ def fix_layout():
             
     keyboard.send('ctrl+v')
 
-def setup_startup():
+def setup_startup(is_startup: bool = False):
     """Checks if a shortcut to the script/exe exists in Windows Startup. If not, prompts user to create one."""
     try:
         is_frozen = getattr(sys, 'frozen', False)
@@ -115,39 +115,51 @@ def setup_startup():
         startup_folder = os.path.join(os.getenv('APPDATA'), r'Microsoft\Windows\Start Menu\Programs\Startup')
         shortcut_path = os.path.join(startup_folder, 'HebrewTypingConvertor.lnk')
         
-        if not os.path.exists(shortcut_path):
-            if is_frozen:
-                import ctypes
-                # MB_YESNO (4) | MB_ICONQUESTION (32) = 36
-                res = ctypes.windll.user32.MessageBoxW(
-                    0,
-                    "Would you like to install Hebrew Typing Convertor and run it automatically on Windows startup?",
-                    "Install Hebrew Typing Convertor",
-                    36
-                )
-                if res != 6:  # 6 is IDYES. If user clicked No (7) or closed it, exit immediately.
-                    sys.exit(0)
-            
-            import subprocess
-            # Powershell script to create shortcut (.lnk)
-            ps_cmd = (
-                f"$s = (New-Object -ComObject WScript.Shell).CreateShortcut('{shortcut_path}'); "
-                f"$s.TargetPath = '{current_path}'; "
-                f"$s.WorkingDirectory = '{os.path.dirname(current_path)}'; "
-                f"$s.Save()"
-            )
-            cmd = f'powershell -NoProfile -Command "{ps_cmd}"'
-            subprocess.run(cmd, shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-            
-            # Show success popup notification if running as compiled EXE
-            if is_frozen:
+        if os.path.exists(shortcut_path):
+            # If the user manually ran it (not from startup boot) and it's compiled, alert them it's already installed
+            if not is_startup and is_frozen:
                 import ctypes
                 ctypes.windll.user32.MessageBoxW(
-                    0, 
-                    "Hebrew Typing Convertor has been successfully added to your Windows Startup and is now running in the background!\n\nUse Ctrl+Shift+Y to translate highlighted text.", 
-                    "Setup Successful", 
+                    0,
+                    "Hebrew Typing Convertor is already installed and is now running in the background!\n\nUse Ctrl+Shift+Y to translate highlighted text.",
+                    "Already Installed",
                     64 # MB_ICONINFORMATION
                 )
+            return
+            
+        if is_frozen:
+            import ctypes
+            # MB_YESNO (4) | MB_ICONQUESTION (32) = 36
+            res = ctypes.windll.user32.MessageBoxW(
+                0,
+                "Would you like to install Hebrew Typing Convertor and run it automatically on Windows startup?",
+                "Install Hebrew Typing Convertor",
+                36
+            )
+            if res != 6:  # 6 is IDYES. If user clicked No (7) or closed it, exit immediately.
+                sys.exit(0)
+        
+        import subprocess
+        # Powershell script to create shortcut (.lnk) with '--startup' argument
+        ps_cmd = (
+            f"$s = (New-Object -ComObject WScript.Shell).CreateShortcut('{shortcut_path}'); "
+            f"$s.TargetPath = '{current_path}'; "
+            f"$s.Arguments = '--startup'; "
+            f"$s.WorkingDirectory = '{os.path.dirname(current_path)}'; "
+            f"$s.Save()"
+        )
+        cmd = f'powershell -NoProfile -Command "{ps_cmd}"'
+        subprocess.run(cmd, shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        
+        # Show success popup notification if running as compiled EXE
+        if is_frozen:
+            import ctypes
+            ctypes.windll.user32.MessageBoxW(
+                0, 
+                "Hebrew Typing Convertor has been successfully added to your Windows Startup and is now running in the background!\n\nUse Ctrl+Shift+Y to translate highlighted text.", 
+                "Setup Successful", 
+                64 # MB_ICONINFORMATION
+            )
     except Exception:
         pass
 
@@ -161,13 +173,22 @@ def check_single_instance():
         # Create a unique named global mutex
         _instance_mutex = ctypes.windll.kernel32.CreateMutexW(None, True, "Global\\HebrewTypingConvertorMutex")
         if ctypes.windll.kernel32.GetLastError() == 183:  # ERROR_ALREADY_EXISTS
+            # If manually run (not on boot), alert the user that it is already running
+            if '--startup' not in sys.argv and getattr(sys, 'frozen', False):
+                ctypes.windll.user32.MessageBoxW(
+                    0,
+                    "Hebrew Typing Convertor is already running in the background!\n\nUse Ctrl+Shift+Y to translate highlighted text.",
+                    "Already Running",
+                    64 # MB_ICONINFORMATION
+                )
             sys.exit(0)
     except Exception:
         pass
 
 def main():
     check_single_instance()
-    setup_startup()
+    is_startup = '--startup' in sys.argv
+    setup_startup(is_startup)
     print("=" * 60)
     print(" Hebrew / English Keyboard Layout Fixer (Active)")
     print(f" Shortcut: Press '{HOTKEY.upper()}' to translate highlighted text")
