@@ -107,7 +107,7 @@ def fix_layout():
     keyboard.send('ctrl+v')
 
 def setup_startup(is_startup: bool = False):
-    """Checks if a shortcut to the script/exe exists in Windows Startup. If not, prompts user to create one."""
+    """Checks if a shortcut to the script/exe exists in Windows Startup. If not, prompts user to create one. If yes, offers uninstall."""
     try:
         is_frozen = getattr(sys, 'frozen', False)
         current_path = sys.executable if is_frozen else os.path.abspath(sys.argv[0])
@@ -116,6 +116,33 @@ def setup_startup(is_startup: bool = False):
         shortcut_path = os.path.join(startup_folder, 'HebrewTypingConvertor.lnk')
         
         if os.path.exists(shortcut_path):
+            # If the user manually ran it (not from startup boot) and it's compiled, offer to uninstall
+            if not is_startup and is_frozen:
+                import ctypes
+                # MB_YESNO (4) | MB_ICONQUESTION (32) = 36
+                res = ctypes.windll.user32.MessageBoxW(
+                    0,
+                    "Hebrew Typing Convertor is already installed on your computer.\n\nWould you like to uninstall it (remove it from Windows Startup)?",
+                    "Uninstall Hebrew Typing Convertor",
+                    36
+                )
+                if res == 6:  # 6 is IDYES. User wants to uninstall.
+                    try:
+                        os.remove(shortcut_path)
+                        ctypes.windll.user32.MessageBoxW(
+                            0,
+                            "Hebrew Typing Convertor has been successfully uninstalled from Windows Startup.",
+                            "Uninstall Successful",
+                            64 # MB_ICONINFORMATION
+                        )
+                    except Exception as e:
+                        ctypes.windll.user32.MessageBoxW(
+                            0,
+                            f"Failed to delete startup shortcut: {e}",
+                            "Uninstall Failed",
+                            16 # MB_ICONERROR
+                        )
+                    sys.exit(0)
             return
             
         if is_frozen:
