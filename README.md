@@ -8,13 +8,16 @@ When you notice a typing mistake, simply **highlight the text** and press **`Ctr
 
 ## 🚀 Quick Start & Installation
 
-To install and run this on your computer (no technical setup or Python required):
+To install, manage, or run this on your computer (no technical setup or Python required):
 
 1. Go to the **[Releases](https://github.com/SalomonMalka/HebrewTypingConvertor/releases)** page of this repository.
 2. Download the **`HebrewTypingConvertor.exe`** file from the assets list of the latest release.
 3. Double-click the downloaded `.exe` file to run it.
-   * **First Run:** A popup window will confirm: *"Hebrew Typing Convertor has been successfully added to your Windows Startup and is now running in the background!"*. It automatically copies a startup shortcut so you never have to open it manually again.
-   * **Subsequent boots:** The app launches completely silently in the background on system startup.
+   * **First Run (Install):** A popup will ask: *"Would you like to install Hebrew Typing Convertor and run it automatically on Windows startup?"*. Click **Yes** to add it to your Startup folder and run it.
+   * **Subsequent boot cycles:** The app launches completely silently in the background on startup.
+   * **Subsequent manual run (Uninstall / Restart):** If you double-click the `.exe` again manually:
+     - It will automatically terminate any older running background instances to let the new version take over immediately.
+     - It will ask: *"Hebrew Typing Convertor is already installed. Would you like to uninstall it?"* Click **Yes** to completely remove it from startup and stop the program, or **No** to keep it running.
 
 ---
 
@@ -26,17 +29,23 @@ To install and run this on your computer (no technical setup or Python required)
    * Press **`Ctrl + Shift + Y`** on your keyboard.
 3. The highlighted text will instantly swap to the correct layout!
 
-*This works globally in any text area on Windows, including web browsers, Microsoft Office (Word, Outlook), Discord, Slack, and text editors.*
+---
+
+## 📋 Clipboard Preservation & Performance
+
+Unlike basic layout translators that overwrite your clipboard, this utility **automatically preserves your copied text**:
+* If you copy some text (e.g., `"Hello"`) and later use `Ctrl+Shift+Y` to translate a layout error, your clipboard is temporarily used to perform the translation but is **automatically restored 150ms later**.
+* After translating, pressing `Ctrl+V` will **still paste your original copied text** (`"Hello"`), keeping your clipboard completely clean!
 
 ---
 
 ## 🔍 How It Works Under the Hood
 1. It listens for the `Ctrl+Shift+Y` keyboard shortcut globally.
-2. When pressed, it waits 50ms for you to release the keys (preventing keyboard modifier leaks in complex applications like Microsoft Word).
-3. It clears the clipboard, copies the highlighted text, and analyzes the characters.
+2. When pressed, it releases all physical modifier keys (`Ctrl`, `Shift`, `Alt`, `Win`) to prevent them from getting stuck and breaking standard keyboard operations like manual `Ctrl+C` copying.
+3. It backs up your current clipboard content, copies the highlighted text, and analyzes the characters.
    - If it contains Hebrew letters, it maps them back to English QWERTY positions.
    - If it contains English letters, it maps them to standard Windows Hebrew keyboard positions.
-4. It sets the clipboard to the corrected text and simulates a `Ctrl+V` paste command.
+4. It sets the clipboard to the corrected text, simulates a `Ctrl+V` paste command using low-level Windows API commands (`keybd_event` via `ctypes`), and restores your original clipboard 150ms later.
 
 ---
 
