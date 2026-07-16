@@ -1,0 +1,18 @@
+# Python build artifacts
+build/
+dist/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# PyInstaller spec files
+*.spec
+
+# User environment
+.venv/
+venv/
+ENV/
+env/
+.idea/
+.vscode/
